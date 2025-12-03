@@ -41,7 +41,7 @@ class AppTheme {
     ),
   );
 
-  // Fitness App Color Palette
+
   static const Color primaryColor = Color(0xFF6C63FF);
   static const Color secondaryColor = Color(0xFF4FD1C5);
   static const Color accentColor = Color(0xFFFF6B6B);
@@ -53,13 +53,13 @@ class AppTheme {
   static const Color textSecondary = Color(0xFF64748B);
   static const Color textLight = Color(0xFF94A3B8);
   
-  // Activity Colors
+
   static const Color stepsColor = Color(0xFF6C63FF);
   static const Color caloriesColor = Color(0xFFFF6B6B);
   static const Color waterColor = Color(0xFF4FD1C5);
   static const Color sleepColor = Color(0xFF9F7AEA);
   
-  // Gradient Colors
+
   static LinearGradient primaryGradient = const LinearGradient(
     colors: [Color(0xFF6C63FF), Color(0xFF4FD1C5)],
     begin: Alignment.topLeft,

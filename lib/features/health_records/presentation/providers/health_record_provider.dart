@@ -17,8 +17,9 @@ class HealthRecordProvider with ChangeNotifier {
     notifyListeners();
   }
 
+
   Future<void> addRecord(HealthRecord record) async {
-    await _database.insertRecord(record);
+    await _database.insertOrAccumulateRecord(record);
     await loadRecords();
   }
 
@@ -42,6 +43,29 @@ class HealthRecordProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> searchByDatePattern(String pattern) async {
+    _searchDate = pattern;
+    final allRecords = await _database.getAllRecords();
+    _filteredRecords = allRecords.where((record) {
+      return record.date.contains(pattern);
+    }).toList();
+    notifyListeners();
+  }
+
+  Future<void> searchByDay(int day) async {
+    _searchDate = day.toString();
+    final allRecords = await _database.getAllRecords();
+    _filteredRecords = allRecords.where((record) {
+      try {
+        final date = DateTime.parse(record.date);
+        return date.day == day;
+      } catch (e) {
+        return false;
+      }
+    }).toList();
+    notifyListeners();
+  }
+
   void clearSearch() {
     _searchDate = '';
     _filteredRecords = [];
@@ -52,7 +76,11 @@ class HealthRecordProvider with ChangeNotifier {
   HealthRecord? getTodaySummary() {
     final today = DateTime.now().toString().split(' ')[0];
     try {
-      return _records.firstWhere((record) => record.date == today);
+      final todayRecords = _records.where((record) => record.date == today).toList();
+      if (todayRecords.isNotEmpty) {
+        return todayRecords.first;
+      }
+      return null;
     } catch (e) {
       return null;
     }

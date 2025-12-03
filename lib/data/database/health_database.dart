@@ -15,8 +15,9 @@ class HealthDatabase {
     String path = join(await getDatabasesPath(), 'healthmate.db');
     return await openDatabase(
       path,
-      version: 1,
+      version: 3, 
       onCreate: (Database db, int version) async {
+        //  health_records table
         await db.execute('''
           CREATE TABLE health_records(
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -27,8 +28,65 @@ class HealthDatabase {
           )
         ''');
         
-        // Insert dummy records
+        //settings table
+        await db.execute('''
+          CREATE TABLE settings(
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            dailyStepsGoal INTEGER DEFAULT 10000,
+            dailyCaloriesGoal REAL DEFAULT 2000.0,
+            dailyWaterGoal REAL DEFAULT 8.0,
+            dailyActiveTimeGoal REAL DEFAULT 60.0,
+            measurementUnit TEXT DEFAULT 'metric',
+            notificationsEnabled INTEGER DEFAULT 1,
+            darkMode INTEGER DEFAULT 0
+          )
+        ''');
+        
+        //  dummy health records
         await _insertDummyRecords(db);
+        
+        
+        await db.insert('settings', {
+          'dailyStepsGoal': 10000,
+          'dailyCaloriesGoal': 2000.0,
+          'dailyWaterGoal': 8.0,
+          'dailyActiveTimeGoal': 60.0,
+          'measurementUnit': 'metric',
+          'notificationsEnabled': 1,
+          'darkMode': 0,
+        });
+      },
+      onUpgrade: (Database db, int oldVersion, int newVersion) async {
+        if (oldVersion < 2) {
+         
+          
+        }
+        if (oldVersion < 3) {
+          
+          await db.execute('''
+            CREATE TABLE settings(
+              id INTEGER PRIMARY KEY AUTOINCREMENT,
+              dailyStepsGoal INTEGER DEFAULT 10000,
+              dailyCaloriesGoal REAL DEFAULT 2000.0,
+              dailyWaterGoal REAL DEFAULT 8.0,
+              dailyActiveTimeGoal REAL DEFAULT 60.0,
+              measurementUnit TEXT DEFAULT 'metric',
+              notificationsEnabled INTEGER DEFAULT 1,
+              darkMode INTEGER DEFAULT 0
+            )
+          ''');
+          
+       
+          await db.insert('settings', {
+            'dailyStepsGoal': 10000,
+            'dailyCaloriesGoal': 2000.0,
+            'dailyWaterGoal': 8.0,
+            'dailyActiveTimeGoal': 60.0,
+            'measurementUnit': 'metric',
+            'notificationsEnabled': 1,
+            'darkMode': 0,
+          });
+        }
       },
     );
   }
@@ -60,14 +118,41 @@ class HealthDatabase {
     }
   }
 
+  // Health Records Methods
   Future<int> insertRecord(HealthRecord record) async {
     final db = await database;
     return await db.insert('health_records', record.toMap());
   }
 
+  Future<void> insertOrAccumulateRecord(HealthRecord record) async {
+    final db = await database;
+    
+    // Check if record already exists for this date
+    final existingRecords = await getRecordsByDate(record.date);
+    
+    if (existingRecords.isNotEmpty) {
+      // total existing record
+      final existingRecord = existingRecords.first;
+      final accumulatedRecord = HealthRecord(
+        id: existingRecord.id,
+        date: record.date,
+        steps: existingRecord.steps + record.steps,
+        calories: existingRecord.calories + record.calories,
+        water: existingRecord.water + record.water,
+      );
+      await updateRecord(accumulatedRecord);
+    } else {
+      
+      await insertRecord(record);
+    }
+  }
+
   Future<List<HealthRecord>> getAllRecords() async {
     final db = await database;
-    final List<Map<String, dynamic>> maps = await db.query('health_records');
+    final List<Map<String, dynamic>> maps = await db.query(
+      'health_records',
+      orderBy: 'date DESC',
+    );
     return List.generate(maps.length, (i) {
       return HealthRecord.fromMap(maps[i]);
     });
@@ -102,5 +187,69 @@ class HealthDatabase {
       where: 'id = ?',
       whereArgs: [id],
     );
+  }
+
+  // Settings Methods
+  Future<void> saveSettings(Map<String, dynamic> settings) async {
+    final db = await database;
+    
+    // Check if settings already exist
+    final existingSettings = await db.query('settings');
+    
+    if (existingSettings.isNotEmpty) {
+      // Update 
+      await db.update(
+        'settings',
+        settings,
+        where: 'id = ?',
+        whereArgs: [existingSettings.first['id']],
+        conflictAlgorithm: ConflictAlgorithm.replace,
+      );
+    } else {
+      // Insert new settings
+      await db.insert(
+        'settings',
+        settings,
+        conflictAlgorithm: ConflictAlgorithm.replace,
+      );
+    }
+  }
+
+  Future<Map<String, dynamic>> getSettings() async {
+    final db = await database;
+    final List<Map<String, dynamic>> maps = await db.query('settings');
+    if (maps.isNotEmpty) {
+      return maps.first;
+    }
+    return {};
+  }
+
+
+  Future<void> clearAllData() async {
+    final db = await database;
+    await db.delete('health_records');
+    await db.delete('settings');
+  }
+
+  // Utility method 
+  Future<void> resetSettings() async {
+    final defaultSettings = {
+      'dailyStepsGoal': 10000,
+      'dailyCaloriesGoal': 2000.0,
+      'dailyWaterGoal': 8.0,
+      'dailyActiveTimeGoal': 60.0,
+      'measurementUnit': 'metric',
+      'notificationsEnabled': 1,
+      'darkMode': 0,
+    };
+    await saveSettings(defaultSettings);
+  }
+
+  
+  Future<void> close() async {
+    if (_database != null) {
+      await _database!.close();
+      _database = null;
+    }
   }
 }

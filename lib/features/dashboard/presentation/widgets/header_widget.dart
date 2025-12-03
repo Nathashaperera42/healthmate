@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:healthmate/core/theme/app_theme.dart';
+import 'package:healthmate/features/settings/presentation/pages/settings_page.dart';
 import 'package:intl/intl.dart';
 
 class HeaderWidget extends StatelessWidget {
@@ -35,7 +36,7 @@ class HeaderWidget extends StatelessWidget {
                     ),
                   ),
                   const Text(
-                    'Alex Johnson',
+                    'Nathasha Perera',
                     style: TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
@@ -44,26 +45,42 @@ class HeaderWidget extends StatelessWidget {
                   ),
                 ],
               ),
-              Container(
-                width: 50,
-                height: 50,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  border: Border.all(color: Colors.white, width: 2),
-                  image: const DecorationImage(
-                    image: NetworkImage(
-                      'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400&h=400&fit=crop&crop=face',
-                    ),
-                    fit: BoxFit.cover,
+              Row(
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.settings, color: Colors.white, size: 24),
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const SettingsPage(),
+                        ),
+                      );
+                    },
                   ),
-                ),
+                  const SizedBox(width: 8),
+                  Container(
+                    width: 50,
+                    height: 50,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(color: Colors.white, width: 2),
+                      image: const DecorationImage(
+                        image: NetworkImage(
+                          'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=400&h=400&fit=crop&crop=face',
+                        ),
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
           
           const SizedBox(height: 20),
           
-          // Date and Motivation
+       
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(

@@ -38,7 +38,7 @@ class RecordCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Header with Date and Actions
+            
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -102,7 +102,7 @@ class RecordCard extends StatelessWidget {
             
             const SizedBox(height: 16),
             
-            // Metrics Grid
+          
             Row(
               children: [
                 _buildMetricItem(

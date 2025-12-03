@@ -1,3 +1,5 @@
+// add_record_page.dart
+
 import 'package:flutter/material.dart';
 import 'package:healthmate/core/theme/app_theme.dart';
 import 'package:healthmate/data/models/health_record.dart';
@@ -6,9 +8,10 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 class AddRecordPage extends StatefulWidget {
-  const AddRecordPage({super.key, this.record});
+  const AddRecordPage({super.key, this.record, this.isEditMode = false});
 
   final HealthRecord? record;
+  final bool isEditMode;
 
   @override
   State<AddRecordPage> createState() => _AddRecordPageState();
@@ -57,12 +60,11 @@ class _AddRecordPageState extends State<AddRecordPage> {
           key: _formKey,
           child: Column(
             children: [
-              // Date Card
               _buildDateCard(),
               
               const SizedBox(height: 20),
               
-              // Steps Card
+            
               _buildInputCard(
                 'Steps Walked',
                 'Enter your daily steps',
@@ -74,7 +76,6 @@ class _AddRecordPageState extends State<AddRecordPage> {
               
               const SizedBox(height: 16),
               
-              // Calories Card
               _buildInputCard(
                 'Calories Burned',
                 'Enter calories burned',
@@ -86,7 +87,6 @@ class _AddRecordPageState extends State<AddRecordPage> {
               
               const SizedBox(height: 16),
               
-              // Water Card
               _buildInputCard(
                 'Water Intake',
                 'Enter water in ml',
@@ -190,13 +190,15 @@ class _AddRecordPageState extends State<AddRecordPage> {
               ],
             ),
           ),
-          IconButton(
-            onPressed: _selectDate,
-            icon: Icon(
-              Icons.edit,
-              color: AppTheme.primaryColor,
+          
+          if (widget.record == null)
+            IconButton(
+              onPressed: _selectDate,
+              icon: Icon(
+                Icons.edit,
+                color: AppTheme.primaryColor,
+              ),
             ),
-          ),
         ],
       ),
     );
@@ -310,8 +312,10 @@ class _AddRecordPageState extends State<AddRecordPage> {
       final provider = Provider.of<HealthRecordProvider>(context, listen: false);
       
       if (widget.record == null) {
+        
         provider.addRecord(record);
       } else {
+     
         provider.updateRecord(record);
       }
 

@@ -1,8 +1,11 @@
+// main.dart
 import 'package:flutter/material.dart';
 import 'package:healthmate/core/theme/app_theme.dart';
 import 'package:healthmate/features/dashboard/presentation/pages/dashboard_page.dart';
 import 'package:healthmate/data/database/health_database.dart';
 import 'package:healthmate/features/health_records/presentation/providers/health_record_provider.dart';
+import 'package:healthmate/features/reports/presentation/providers/report_provider.dart';
+import 'package:healthmate/features/settings/presentation/providers/settings_provider.dart';
 import 'package:provider/provider.dart';
 
 void main() async {
@@ -20,6 +23,12 @@ class MyApp extends StatelessWidget {
       providers: [
         ChangeNotifierProvider(
           create: (context) => HealthRecordProvider(),
+        ),
+        ChangeNotifierProvider(
+          create: (context) => ReportProvider(),
+        ),
+        ChangeNotifierProvider(
+          create: (context) => SettingsProvider(),
         ),
       ],
       child: MaterialApp(

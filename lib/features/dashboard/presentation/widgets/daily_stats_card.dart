@@ -1,12 +1,38 @@
 import 'package:flutter/material.dart';
 import 'package:healthmate/core/theme/app_theme.dart';
+import 'package:healthmate/data/models/health_record.dart';
+import 'package:healthmate/features/settings/data/models/settings_model.dart';
 import 'package:percent_indicator/percent_indicator.dart';
 
 class DailyStatsCard extends StatelessWidget {
-  const DailyStatsCard({super.key});
+  final HealthRecord? todaySummary;
+  final AppSettings? settings;
+  
+  const DailyStatsCard({super.key, this.todaySummary, this.settings});
 
   @override
   Widget build(BuildContext context) {
+   
+    final stepsGoal = settings?.dailyStepsGoal ?? 10000;
+    final caloriesGoal = settings?.dailyCaloriesGoal?.toInt() ?? 2000; // Convert to int
+    final waterGoal = settings?.dailyWaterGoal?.toInt() ?? 2000; // Convert to int
+    
+  
+    final stepsProgress = todaySummary != null 
+        ? (todaySummary!.steps / stepsGoal).clamp(0.0, 1.0) 
+        : 0.0;
+    final caloriesProgress = todaySummary != null 
+        ? (todaySummary!.calories / caloriesGoal).clamp(0.0, 1.0) 
+        : 0.0;
+    final waterProgress = todaySummary != null 
+        ? (todaySummary!.water / waterGoal).clamp(0.0, 1.0) 
+        : 0.0;
+    
+    // Calculate overall progress
+    final overallProgress = todaySummary != null 
+        ? ((stepsProgress + caloriesProgress + waterProgress) / 3).clamp(0.0, 1.0)
+        : 0.0;
+
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -25,9 +51,13 @@ class DailyStatsCard extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
+              const Text(
                 'Daily Progress',
-                style: Theme.of(context).textTheme.titleLarge,
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 18,
+                  color: AppTheme.textPrimary,
+                ),
               ),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -35,9 +65,9 @@ class DailyStatsCard extends StatelessWidget {
                   gradient: AppTheme.primaryGradient,
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: const Text(
-                  '75%',
-                  style: TextStyle(
+                child: Text(
+                  '${(overallProgress * 100).toInt()}%',
+                  style: const TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.w600,
                     fontSize: 14,
@@ -50,17 +80,17 @@ class DailyStatsCard extends StatelessWidget {
           const SizedBox(height: 20),
           
           // Progress Bars
-          _buildProgressItem('Steps', 0.75, AppTheme.stepsColor),
+          _buildProgressItem('Steps', stepsProgress, AppTheme.stepsColor, todaySummary?.steps ?? 0, stepsGoal),
           const SizedBox(height: 12),
-          _buildProgressItem('Calories', 0.6, AppTheme.caloriesColor),
+          _buildProgressItem('Calories', caloriesProgress, AppTheme.caloriesColor, todaySummary?.calories ?? 0, caloriesGoal),
           const SizedBox(height: 12),
-          _buildProgressItem('Water', 0.9, AppTheme.waterColor),
+          _buildProgressItem('Water', waterProgress, AppTheme.waterColor, todaySummary?.water ?? 0, waterGoal),
         ],
       ),
     );
   }
 
-  Widget _buildProgressItem(String label, double progress, Color color) {
+  Widget _buildProgressItem(String label, double progress, Color color, int currentValue, int targetValue) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -92,6 +122,15 @@ class DailyStatsCard extends StatelessWidget {
           barRadius: const Radius.circular(10),
           progressColor: color,
           backgroundColor: AppTheme.textLight.withOpacity(0.3),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          '$currentValue / $targetValue',
+          style: TextStyle(
+            fontSize: 12,
+            color: AppTheme.textSecondary,
+            fontWeight: FontWeight.w500,
+          ),
         ),
       ],
     );

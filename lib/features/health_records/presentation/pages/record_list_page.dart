@@ -2,10 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:healthmate/core/theme/app_theme.dart';
 import 'package:healthmate/data/models/health_record.dart';
+import 'package:healthmate/features/dashboard/presentation/pages/dashboard_page.dart';
 import 'package:healthmate/features/health_records/presentation/pages/add_record_page.dart';
 import 'package:healthmate/features/health_records/presentation/providers/health_record_provider.dart';
+import 'package:healthmate/features/reports/presentation/pages/generate_report_page.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
+import 'package:curved_navigation_bar/curved_navigation_bar.dart';
 
 class RecordListPage extends StatefulWidget {
   const RecordListPage({super.key});
@@ -17,6 +20,7 @@ class RecordListPage extends StatefulWidget {
 class _RecordListPageState extends State<RecordListPage> {
   final _searchController = TextEditingController();
   bool _isSearching = false;
+  int _currentIndex = 1; 
 
   @override
   void initState() {
@@ -45,15 +49,28 @@ class _RecordListPageState extends State<RecordListPage> {
           icon: const Icon(Icons.arrow_back_rounded, color: AppTheme.textPrimary),
           onPressed: () => Navigator.pop(context),
         ),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.assessment, color: AppTheme.primaryColor),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const GenerateReportPage(),
+                ),
+              );
+            },
+          ),
+        ],
       ),
       body: Consumer<HealthRecordProvider>(
         builder: (context, provider, child) {
           return Column(
             children: [
-              // Search Bar
+              
               _buildSearchBar(provider),
               
-              // Records Count
+             
               if (provider.records.isNotEmpty)
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -71,7 +88,7 @@ class _RecordListPageState extends State<RecordListPage> {
                   ),
                 ),
               
-              // Records List
+              
               Expanded(
                 child: provider.records.isEmpty
                     ? _buildEmptyState(provider)
@@ -88,6 +105,54 @@ class _RecordListPageState extends State<RecordListPage> {
           );
         },
       ),
+
+      
+      bottomNavigationBar: CurvedNavigationBar(
+        backgroundColor: AppTheme.backgroundLight,
+        color: AppTheme.primaryColor,
+        animationDuration: const Duration(milliseconds: 300),
+        index: _currentIndex,
+        items: const [
+          Icon(Icons.dashboard, color: Colors.white, size: 30),
+          Icon(Icons.list, color: Colors.white, size: 30),
+        ],
+        onTap: (index) {
+          setState(() {
+            _currentIndex = index;
+          });
+          if (index == 0) {
+            
+            Navigator.pushAndRemoveUntil(
+              context,
+              MaterialPageRoute(builder: (context) => const DashboardPage()),
+              (route) => false,
+            );
+          }
+          
+        },
+      ),
+
+      
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const AddRecordPage(),
+            ),
+          ).then((_) {
+            
+            Provider.of<HealthRecordProvider>(context, listen: false).loadRecords();
+          });
+        },
+        backgroundColor: AppTheme.primaryColor,
+        foregroundColor: Colors.white,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: const Icon(Icons.add, size: 30),
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
     );
   }
 
@@ -122,7 +187,7 @@ class _RecordListPageState extends State<RecordListPage> {
             child: TextField(
               controller: _searchController,
               decoration: InputDecoration(
-                hintText: 'Search by date (YYYY-MM-DD)',
+                hintText: 'Search by date (e.g., 2024-01, Jan, January, 15)',
                 hintStyle: GoogleFonts.inter(
                   color: AppTheme.textLight,
                   fontSize: 14,
@@ -137,7 +202,7 @@ class _RecordListPageState extends State<RecordListPage> {
               ),
               onChanged: (value) {
                 if (value.isNotEmpty) {
-                  provider.searchByDate(value);
+                  _performSearch(value, provider);
                   setState(() {
                     _isSearching = true;
                   });
@@ -164,6 +229,72 @@ class _RecordListPageState extends State<RecordListPage> {
     );
   }
 
+  void _performSearch(String searchText, HealthRecordProvider provider) {
+    
+    final searchTextLower = searchText.toLowerCase();
+    
+    
+    if (RegExp(r'^\d{4}-\d{2}$').hasMatch(searchText)) {
+      provider.searchByDatePattern(searchText); // Search for records starting with this pattern
+      return;
+    }
+    
+   
+    if (RegExp(r'^\d{4}$').hasMatch(searchText)) {
+      provider.searchByDatePattern(searchText);
+      return;
+    }
+    
+    
+    final monthPattern = _getMonthPattern(searchTextLower);
+    if (monthPattern != null) {
+      provider.searchByDatePattern(monthPattern);
+      return;
+    }
+    
+    
+    if (RegExp(r'^\d{1,2}$').hasMatch(searchText)) {
+      final day = int.tryParse(searchText);
+      if (day != null) {
+        provider.searchByDay(day);
+        return;
+      }
+    }
+    
+   
+    provider.searchByDate(searchText);
+  }
+
+  String? _getMonthPattern(String monthText) {
+    const monthMap = {
+      'jan': '-01-',
+      'january': '-01-',
+      'feb': '-02-',
+      'february': '-02-',
+      'mar': '-03-',
+      'march': '-03-',
+      'apr': '-04-',
+      'april': '-04-',
+      'may': '-05-',
+      'jun': '-06-',
+      'june': '-06-',
+      'jul': '-07-',
+      'july': '-07-',
+      'aug': '-08-',
+      'august': '-08-',
+      'sep': '-09-',
+      'september': '-09-',
+      'oct': '-10-',
+      'october': '-10-',
+      'nov': '-11-',
+      'november': '-11-',
+      'dec': '-12-',
+      'december': '-12-',
+    };
+    
+    return monthMap[monthText];
+  }
+
   Widget _buildRecordCard(HealthRecord record, BuildContext context, HealthRecordProvider provider) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -186,7 +317,7 @@ class _RecordListPageState extends State<RecordListPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Header with Date and Actions
+            
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -213,7 +344,10 @@ class _RecordListPageState extends State<RecordListPage> {
                         MaterialPageRoute(
                           builder: (context) => AddRecordPage(record: record),
                         ),
-                      );
+                      ).then((_) {
+                        
+                        provider.loadRecords();
+                      });
                     } else if (value == 'delete') {
                       _showDeleteDialog(record, context, provider);
                     }
@@ -258,7 +392,7 @@ class _RecordListPageState extends State<RecordListPage> {
             
             const SizedBox(height: 16),
             
-            // Metrics Grid
+           
             Row(
               children: [
                 _buildMetricItem(
@@ -368,7 +502,10 @@ class _RecordListPageState extends State<RecordListPage> {
                 MaterialPageRoute(
                   builder: (context) => const AddRecordPage(),
                 ),
-              );
+              ).then((_) {
+              
+                provider.loadRecords();
+              });
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: AppTheme.primaryColor,

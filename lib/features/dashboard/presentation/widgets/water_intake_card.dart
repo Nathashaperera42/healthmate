@@ -1,12 +1,27 @@
 import 'package:flutter/material.dart';
 import 'package:healthmate/core/theme/app_theme.dart';
+import 'package:healthmate/data/models/health_record.dart';
 import 'package:percent_indicator/percent_indicator.dart';
 
 class WaterIntakeCard extends StatelessWidget {
-  const WaterIntakeCard({super.key});
+  final HealthRecord? todaySummary;
+  final int dailyWaterGoal;
+  
+  const WaterIntakeCard({super.key, this.todaySummary, this.dailyWaterGoal = 2000});
 
   @override
   Widget build(BuildContext context) {
+    
+    final waterProgress = todaySummary != null 
+        ? (todaySummary!.water / dailyWaterGoal).clamp(0.0, 1.0) 
+        : 0.0;
+    final waterInLiters = todaySummary != null ? todaySummary!.water / 1000.0 : 0.0;
+    
+    // Calculate how many cups are filled (8 cups = 2000ml, each cup = 250ml)
+    final filledCups = todaySummary != null 
+        ? (todaySummary!.water / 250).clamp(0, (dailyWaterGoal / 250).ceil()).toInt() 
+        : 0;
+
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -55,7 +70,7 @@ class WaterIntakeCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    '1.8',
+                    '${waterInLiters.toStringAsFixed(1)}',
                     style: TextStyle(
                       fontSize: 32,
                       fontWeight: FontWeight.bold,
@@ -66,16 +81,25 @@ class WaterIntakeCard extends StatelessWidget {
                     'liters today',
                     style: Theme.of(context).textTheme.bodyMedium,
                   ),
+                  const SizedBox(height: 4),
+                  Text(
+                    '${todaySummary?.water ?? 0} ml / $dailyWaterGoal ml',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: AppTheme.textSecondary,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
                 ],
               ),
               CircularPercentIndicator(
                 radius: 40,
                 lineWidth: 8,
                 animation: true,
-                percent: 0.9,
-                center: const Text(
-                  '90%',
-                  style: TextStyle(
+                percent: waterProgress,
+                center: Text(
+                  '${(waterProgress * 100).toInt()}%',
+                  style: const TextStyle(
                     fontWeight: FontWeight.bold,
                     color: AppTheme.waterColor,
                   ),
@@ -93,14 +117,8 @@ class WaterIntakeCard extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
-              _buildWaterCup('250ml', true),
-              _buildWaterCup('250ml', true),
-              _buildWaterCup('250ml', true),
-              _buildWaterCup('250ml', true),
-              _buildWaterCup('250ml', true),
-              _buildWaterCup('250ml', true),
-              _buildWaterCup('250ml', false),
-              _buildWaterCup('250ml', false),
+              for (int i = 0; i < (dailyWaterGoal / 250).ceil(); i++)
+                _buildWaterCup('250ml', i < filledCups),
             ],
           ),
         ],

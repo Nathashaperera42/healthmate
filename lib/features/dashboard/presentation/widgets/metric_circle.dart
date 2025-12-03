@@ -60,7 +60,6 @@ class MetricCircle extends StatelessWidget {
                 ),
               ),
 
-              // Progress Circle
               CircularPercentIndicator(
                 radius: 36,
                 lineWidth: 6,
@@ -100,7 +99,7 @@ class MetricCircle extends StatelessWidget {
 
           const SizedBox(height: 12),
 
-          // Value and Label
+        
           Text(
             _formatValue(value),
             style: GoogleFonts.poppins(
@@ -137,7 +136,6 @@ class MetricCircle extends StatelessWidget {
 
           const SizedBox(height: 8),
 
-          // Mini Progress Bar
           Container(
             width: 40,
             height: 4,

@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-
+import 'package:google_fonts/google_fonts.dart';
 class AppTheme {
   static final ThemeData lightTheme = ThemeData(
     primaryColor: const Color(0xFF6C63FF),
     scaffoldBackgroundColor: const Color(0xFFF8FAFC),
-    fontFamily: 'Inter',
+  fontFamily: 'Roboto', 
     appBarTheme: const AppBarTheme(
       backgroundColor: Colors.white,
       foregroundColor: Color(0xFF1E293B),

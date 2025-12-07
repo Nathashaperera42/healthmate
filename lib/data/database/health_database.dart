@@ -118,7 +118,7 @@ class HealthDatabase {
     }
   }
 
-  // Health Records Methods
+  // Create Health Records 
   Future<int> insertRecord(HealthRecord record) async {
     final db = await database;
     return await db.insert('health_records', record.toMap());
@@ -127,11 +127,11 @@ class HealthDatabase {
   Future<void> insertOrAccumulateRecord(HealthRecord record) async {
     final db = await database;
     
-    // Check if record already exists for this date
+   
     final existingRecords = await getRecordsByDate(record.date);
     
     if (existingRecords.isNotEmpty) {
-      // total existing record
+     
       final existingRecord = existingRecords.first;
       final accumulatedRecord = HealthRecord(
         id: existingRecord.id,
@@ -147,6 +147,7 @@ class HealthDatabase {
     }
   }
 
+  //Get All Records
   Future<List<HealthRecord>> getAllRecords() async {
     final db = await database;
     final List<Map<String, dynamic>> maps = await db.query(
@@ -158,6 +159,7 @@ class HealthDatabase {
     });
   }
 
+  //Get All Record by date 
   Future<List<HealthRecord>> getRecordsByDate(String date) async {
     final db = await database;
     final List<Map<String, dynamic>> maps = await db.query(
@@ -170,6 +172,7 @@ class HealthDatabase {
     });
   }
 
+  //Update Record 
   Future<int> updateRecord(HealthRecord record) async {
     final db = await database;
     return await db.update(
@@ -180,6 +183,7 @@ class HealthDatabase {
     );
   }
 
+  //Delete Record 
   Future<int> deleteRecord(int id) async {
     final db = await database;
     return await db.delete(
@@ -193,7 +197,7 @@ class HealthDatabase {
   Future<void> saveSettings(Map<String, dynamic> settings) async {
     final db = await database;
     
-    // Check if settings already exist
+  
     final existingSettings = await db.query('settings');
     
     if (existingSettings.isNotEmpty) {
@@ -206,7 +210,7 @@ class HealthDatabase {
         conflictAlgorithm: ConflictAlgorithm.replace,
       );
     } else {
-      // Insert new settings
+     
       await db.insert(
         'settings',
         settings,

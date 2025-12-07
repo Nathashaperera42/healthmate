@@ -1,5 +1,3 @@
-// add_record_page.dart
-
 import 'package:flutter/material.dart';
 import 'package:healthmate/core/theme/app_theme.dart';
 import 'package:healthmate/data/models/health_record.dart';
